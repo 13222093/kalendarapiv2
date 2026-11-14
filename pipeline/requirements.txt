@@ -1,0 +1,4 @@
+numpy
+requests
+tifffile
+h5py
