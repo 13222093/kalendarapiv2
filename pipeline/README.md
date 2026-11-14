@@ -57,6 +57,8 @@ python -I pipeline/build_states.py --district "Pulang Pisau" --boundaries data-r
 |---|---|
 | `grid.json` | Tile, number of cells, the boundary file and its sha256, and every cell as `[row, col, lon, lat]` in index order |
 | `water.json` | Reference period, the rule, and the indices of static water cells |
+| `boundary.geojson` | The district polygon used (for drawing its outline) |
+| `index.json` | District, dates, k, list of months, and the registered Release (`null` = development data outside every registered period; the app shows a ribbon) |
 | `m/<YYYY-MM>.json` | One entry per day (described below) |
 
 Each day entry holds:

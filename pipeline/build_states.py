@@ -82,12 +82,14 @@ def main(argv=None) -> int:
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
 
+    releases = []
     for s, e in ((a.start, a.end), a.water_ref):
         try:
-            guard.check(s, e)
+            releases.append(guard.check(s, e))
         except guard.NotRegisteredError as err:
             print(f"refused: {err}", file=sys.stderr)
             return 2
+    release = releases[0]   # None: the period is outside every registered window (development data)
 
     feature = polygon.load_feature(a.boundaries, a.district)
     rs = polygon.rings(feature)
@@ -104,6 +106,8 @@ def main(argv=None) -> int:
     out = pathlib.Path(a.out) / "d" / slug
     (out / "m").mkdir(parents=True, exist_ok=True)
 
+    (out / "boundary.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": [feature]}),
+                                          encoding="utf-8")
     boundary_bytes = pathlib.Path(a.boundaries).read_bytes()
     (out / "grid.json").write_text(json.dumps({
         "district": a.district, "tile": [h, v], "n_cells": int(idx.size),
@@ -170,6 +174,11 @@ def main(argv=None) -> int:
     for ym, entries in months.items():
         (out / "m" / f"{ym}.json").write_text(json.dumps({"district": a.district, "month": ym, "days": entries}),
                                              encoding="utf-8")
+    (out / "index.json").write_text(json.dumps({
+        "district": a.district, "slug": slug, "start": a.start.isoformat(), "end": a.end.isoformat(), "k": a.k,
+        "months": sorted(months), "registered_release": release,
+        "note": None if release else "Development data: outside every pre-registered period (PREREGISTRATION.md).",
+    }), encoding="utf-8")
     print(json.dumps({"district": a.district, "tile": [h, v], "cells": int(idx.size),
                       "water_cells": int(water_mask[inside].sum()), "days": sum(len(x) for x in months.values()),
                       "out": str(out)}))
