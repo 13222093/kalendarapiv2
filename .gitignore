@@ -27,3 +27,4 @@ dist-ssr
 data-raw/
 .venv/
 .claude/
+__pycache__/
