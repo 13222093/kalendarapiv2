@@ -60,6 +60,11 @@ Spec: the team's internal product spec, PRD v1.1 (sections 5, 6.6, 6.7, 9, 10). 
 | 0, 1, 2 | not processed | no data |
 
 - **Composites:** daily FireMask composites keep the highest class of the day and include night passes. This is stated wherever pass times are shown.
+- **Static water mask:** water cells are removed with a static mask, built from Terra and Aqua over 1 January to 31 December 2018, a year this plan does not use.
+  - **Rule:** a cell is water if FireMask said water (3) at least as often as clear land (5) over that year, and at least once.
+  - **Exclusion:** water cells are left out of every count and denominator. If a fire is detected in a water cell, it still counts as `F`.
+  - **Single readings:** a class 3 reading on a non-water cell counts as *no data* for that sensor on that day. One reason this is needed: a cloudy day turns water cells into "cloud" in the daily composite.
+- **Implementation:** `pipeline/kapi/` and `pipeline/build_states.py`, committed before registration. Unit tests are in `pipeline/tests/`. The code refuses any day of 2019 until this plan's Release exists.
 
 ### 3.2 Cell-day state, sensors Terra, Aqua, and S-NPP
 
@@ -70,7 +75,8 @@ Spec: the team's internal product spec, PRD v1.1 (sections 5, 6.6, 6.7, 9, 10). 
 | `U` | not `F`, no sensor is *clear*, and at least one sensor is *cloud* |
 | `N` | everything else |
 
-- **Threshold:** **k = 1** is primary; **k = 2** is reported as sensitivity.
+- **Threshold:** **k = 1** is primary; **k = 2** is reported as sensitivity. Both are written for every day.
+- **Sensors:** NOAA-20 (VJ114A1) is not combined into these states. If it is obtained, it is reported as a separate sensitivity check.
 - **FIRMS-only fires:** the share of `F` cell-days that come only from FIRMS points (no FireMask fire class) is reported.
 
 ### 3.3 Statistics (all written to `numbers.json`)
