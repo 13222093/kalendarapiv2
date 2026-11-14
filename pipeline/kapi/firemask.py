@@ -105,14 +105,24 @@ class ModisPC:
         item = items[0]
         path = self.cache / f"{item['id']}_FireMask.tif"
         if not path.exists():
+            import time
+            import requests
             href = item["assets"]["FireMask"]["href"]
-            url = f"{href}?{self._token(href)}"
-            with self._get(url, stream=True, timeout=300) as r:
-                tmp = path.with_suffix(".part")
-                with open(tmp, "wb") as f:
-                    for chunk in r.iter_content(1 << 20):
-                        f.write(chunk)
-                tmp.replace(path)
+            tmp = path.with_suffix(".part")
+            for attempt in range(5):
+                try:
+                    with self._get(f"{href}?{self._token(href)}", stream=True, timeout=300) as r:
+                        with open(tmp, "wb") as f:
+                            for chunk in r.iter_content(1 << 20):
+                                f.write(chunk)
+                    tmp.replace(path)
+                    break
+                except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError,
+                        requests.exceptions.Timeout):
+                    tmp.unlink(missing_ok=True)
+                    if attempt == 4:
+                        raise
+                    time.sleep(2 ** (attempt + 1))
         return item, path
 
     def _get(self, url: str, **kw):
@@ -121,8 +131,16 @@ class ModisPC:
     def _send(self, method: str, url: str, **kw):
         """A request with retries on HTTP 429 and 5xx (waits Retry-After, or 2, 4, 8... seconds)."""
         import time
+        import requests
         for attempt in range(7):
-            r = getattr(self.http, method)(url, headers=UA, **kw)
+            try:
+                r = getattr(self.http, method)(url, headers=UA, **kw)
+            except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError,
+                    requests.exceptions.Timeout):
+                if attempt == 6:
+                    raise
+                time.sleep(min(2 ** (attempt + 1), 60))
+                continue
             if r.status_code != 429 and r.status_code < 500:
                 r.raise_for_status()
                 return r
