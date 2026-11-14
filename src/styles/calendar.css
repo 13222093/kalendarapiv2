@@ -1,0 +1,104 @@
+/* KalenderApi v1.1 (new file): the district calendar (#/calendar). */
+.ka-cal {
+  min-height: 100vh;
+  background: #05090b;
+  color: #e6eeec;
+  font-family: 'Public Sans Variable', system-ui, sans-serif;
+  padding: 20px 24px 40px;
+  box-sizing: border-box;
+}
+.ka-cal-top { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; font-size: 13px; }
+.ka-cal-top a { color: #8fe3d0; text-decoration: none; }
+.ka-cal-top a:hover { text-decoration: underline; }
+.ka-cal-brand { font-weight: 700; font-size: 15px; color: #e6eeec !important; }
+.ka-cal-ribbon {
+  margin: 14px 0 0;
+  max-width: 880px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f2c744;
+  color: #1b2420;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.ka-cal-kicker { margin: 18px 0 2px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #9fb3ae; }
+.ka-cal-title { margin: 0; font-family: 'Fraunces Variable', Georgia, serif; font-size: 30px; line-height: 1.15; }
+.ka-cal-sub { margin: 6px 0 16px; font-size: 14px; color: #c7d5d2; max-width: 760px; }
+
+.ka-cal-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .ka-cal-body { grid-template-columns: minmax(0, 1fr); } }
+
+.ka-cal-grid { display: grid; grid-template-columns: 48px repeat(12, minmax(22px, 1fr)) 72px; gap: 3px; }
+.ka-cal-head { font-size: 11.5px; color: #9fb3ae; text-align: center; padding-bottom: 2px; }
+.ka-cal-year { font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 12.5px; color: #c7d5d2; align-self: center; }
+.ka-cal-total { font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: 11.5px; color: #9fb3ae; align-self: center; text-align: right; }
+
+.ka-cal-tile {
+  position: relative;
+  height: 30px;
+  border-radius: 3px;
+  border: 1px solid rgba(214, 228, 224, 0.12);
+  padding: 0;
+  cursor: pointer;
+  background-color: rgba(214, 228, 224, 0.04);
+}
+.ka-cal-tile:focus-visible { outline: 2px solid #8fe3d0; outline-offset: 1px; }
+.ka-cal-tile[aria-pressed='true'] { border-color: #8fe3d0; box-shadow: inset 0 0 0 1px #8fe3d0; }
+.ka-cal-tile.f1 { background-color: #fbe3a0; }
+.ka-cal-tile.f2 { background-color: #f4ae55; }
+.ka-cal-tile.f3 { background-color: #df7230; }
+.ka-cal-tile.f4 { background-color: #b0401f; }
+.ka-cal-tile.f5 { background-color: #6a1c17; }
+.ka-cal-tile.h1::after, .ka-cal-tile.h2::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.ka-cal-tile.h1::after { background-image: repeating-linear-gradient(135deg, rgba(20, 28, 34, 0.75) 0 1.25px, transparent 1.25px 6px); }
+.ka-cal-tile.h2::after { background-image: repeating-linear-gradient(135deg, rgba(20, 28, 34, 0.85) 0 1.5px, transparent 1.5px 4px); }
+.ka-cal-tile.f0.h1::after { background-image: repeating-linear-gradient(135deg, rgba(236, 242, 246, 0.6) 0 1.25px, transparent 1.25px 6px); }
+.ka-cal-tile.f0.h2::after { background-image: repeating-linear-gradient(135deg, rgba(236, 242, 246, 0.8) 0 1.5px, transparent 1.5px 4px); }
+.ka-cal-tile.locked {
+  cursor: default;
+  background: repeating-linear-gradient(45deg, rgba(214, 228, 224, 0.06) 0 4px, transparent 4px 8px);
+  border-style: dashed;
+  border-color: rgba(214, 228, 224, 0.3);
+}
+.ka-cal-tile.missing { cursor: default; border-style: dotted; }
+
+.ka-cal-lockrow { grid-column: 2 / span 12; align-self: center; font-size: 12px; color: #c7d5d2; padding-left: 8px; }
+
+.ka-cal-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 12.5px; color: #c7d5d2; align-items: center; }
+.ka-cal-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.ka-cal-sw { width: 16px; height: 14px; border-radius: 3px; border: 1px solid rgba(214, 228, 224, 0.25); position: relative; display: inline-block; }
+.ka-cal-ramp { display: inline-flex; gap: 2px; }
+.ka-cal-ramp i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+
+.ka-cal-panel {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(214, 228, 224, 0.05);
+  border: 1px solid rgba(214, 228, 224, 0.14);
+  font-size: 13.5px;
+}
+.ka-cal-panel h2 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+.ka-cal-panel dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
+.ka-cal-panel dt { color: #c7d5d2; }
+.ka-cal-panel dd { margin: 0; text-align: right; font-family: 'Geist Mono Variable', ui-monospace, monospace; }
+.ka-cal-panel .big { font-size: 22px; }
+.ka-cal-panel small { display: block; margin-top: 8px; color: #9fb3ae; font-size: 12px; line-height: 1.45; }
+.ka-cal-open {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #2fd1b2;
+  color: #04110e;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 13px;
+}
+.ka-cal-src { margin-top: 18px; font-size: 11.5px; line-height: 1.5; color: #8a9693; max-width: 880px; }
+.ka-cal-error { color: #ffb4a0; }

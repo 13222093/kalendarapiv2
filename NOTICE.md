@@ -32,5 +32,14 @@ NASA GIBS / Worldview imagery.
 ## KalenderApi v1.1 copy (2026-11-14)
 
 This folder (`kalenderapi-v1.1`) is a copy of `kalenderapi/app` as it was on 14 November 2026, made to build the v1.1
-spec (`docs/PRD-KalenderApi-demo-v1.1.md`). Everything above still applies. Further changes made in this folder are
+spec (the team's internal PRD v1.1, not part of this repository). Everything above still applies. Further changes made in this folder are
 listed below.
+- `src/pages/Season.tsx` (2026-11-14, v1.1): the "re-appeared" rings, counts, captions and rule are hidden until the
+  pre-registered test H4 passes (`SHOW_REAPPEARED`). The blind-zero layer from v1.0 is labelled "preliminary, MODIS
+  only", and its season and district totals are hidden (`SHOW_V10_TOTALS`); the legend says "cloud or smoke".
+- `src/pages/Zero.tsx`, `src/styles/zero.css` (new, 2026-11-14, v1.1): the zero inspector (`#/zero`), one district and one day of
+  1 km cell-day states (fire, trusted zero, untrusted zero, no data) over the NASA GIBS photo, from `pipeline/build_states.py`.
+  `src/App.tsx`: route `#/zero`. `src/pages/Season.tsx`: a "Zero inspector" link in the header.
+- User flow (2026-11-14, v1.1): a first visit with no page in the address opens `#/story` (`src/App.tsx`); the end of the
+  story and "Skip story" lead to the zero inspector first, then "Play the season", "Explore the map" and "Replay"
+  (`src/pages/Story.tsx`); the header of the map pages has a "Zero inspector" button next to "Story" (`src/App.tsx`).
