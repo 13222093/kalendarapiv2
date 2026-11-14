@@ -1,10 +1,8 @@
 # KalenderApi: pre-registration
 
-**Status: FINAL DRAFT (14 November 2026). All thresholds confirmed by the team. Not yet registered.**
+**Status: Registered as GitHub Release [`prereg-v1`](https://github.com/13222093/kalendarapiv2/releases/tag/prereg-v1), published 2026-11-14 06:29:52 UTC. The tag points to commit `d929f4f`.**
 
-This plan becomes binding when it is published as the GitHub Release `prereg-v1`. The Release's server timestamp is the proof that the plan came before the results.
-
-What is left before that Release: put this folder in a GitHub repository, publish the Release, and change this status line to "Registered as Release `prereg-v1` on {date}".
+The registered text is this file as it stands at that tag. The Release's server timestamp is the proof that the plan came before the results. After registration, only this status line changes; anything else goes under "Deviations".
 
 Until the Release exists, this project computes no season-level statistic. Section 9, "Access tests before registration", lists everything opened before then. It also discloses a season-level visibility layer that the team's separate v1.0 project had already built.
 
