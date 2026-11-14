@@ -10,6 +10,7 @@ This pipeline builds the daily cell-day states `F`, `T`, `U`, `N` (and `W` for s
 | `kapi/states.py` | Combines the sensors into cell-day states with threshold k, and builds the static water mask |
 | `kapi/guard.py` | **Refuses any day of 2019 until the Release `prereg-v1` is published** |
 | `build_states.py` | Command line: one district and a date range, writing JSON files |
+| `fetch_modis.py` | Command line: download (only) the MODIS FireMask files of one tile and a date range. It computes nothing, so it may fetch any period, 2019 included |
 | `tests/test_core.py` | Unit tests (no network) |
 | `firemask_access_test.py`, `ACCESS_TEST.md` | The access test done before registration |
 
@@ -26,6 +27,15 @@ python -m pip install -r pipeline/requirements.txt
 ```bash
 python -I pipeline/tests/test_core.py -v
 ```
+
+**Download first** (the 2018 water-mask reference for both districts: 184 files, about 121 MB):
+
+```bash
+python -I pipeline/fetch_modis.py --tile h29v09 --start 2018-01-01 --end 2018-12-31 --cache data-raw/modis14a1
+python -I pipeline/fetch_modis.py --tile h28v09 --start 2018-01-01 --end 2018-12-31 --cache data-raw/modis14a1
+```
+
+Files come from Planetary Computer with one read token per storage container. Requests that hit its rate limit (HTTP 429) wait and retry.
 
 **Development run on 2018,** a year the plan does not use:
 

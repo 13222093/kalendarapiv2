@@ -23,7 +23,7 @@ _MAP[5] = CLEAR
 _MAP[7] = _MAP[8] = _MAP[9] = FIRE
 
 STAC = "https://planetarycomputer.microsoft.com/api/stac/v1/search"
-SIGN = "https://planetarycomputer.microsoft.com/api/sas/v1/sign"
+TOKEN = "https://planetarycomputer.microsoft.com/api/sas/v1/token"   # + /<storage account>/<container>
 UA = {"User-Agent": "kalenderapi-pipeline/0.1"}
 
 
@@ -78,11 +78,12 @@ class ModisPC:
             # a tiny box at the tile centre, so the search returns this tile's items and not 50 tiles from elsewhere
             body = {"collections": ["modis-14A1-061"], "limit": 50, "bbox": [lo - 0.01, la - 0.01, lo + 0.01, la + 0.01],
                     "datetime": f"{day.isoformat()}T00:00:00Z/{day.isoformat()}T23:59:59Z"}
-            r = self.http.post(STAC, json=body, headers=UA, timeout=60)
-            r.raise_for_status()
+            r = self._send("post", STAC, json=body, timeout=60)
             tile = f"h{h:02d}v{v:02d}"
             self._items[key] = [f for f in r.json()["features"] if tile in f["id"]]
         return self._items[key]
+
+    KEEP_FILES = 4   # decoded 8-day files kept in memory (about 11.5 MB each); days are read in order
 
     def _read(self, path: pathlib.Path) -> tuple[list[dt.date], np.ndarray]:
         if path not in self._files:
@@ -91,26 +92,64 @@ class ModisPC:
                 dates = parse_dates(t.pages[0].tags["GDAL_METADATA"].value)
                 arr = t.asarray()
             self._files[path] = (dates, arr)
+            while len(self._files) > self.KEEP_FILES:
+                self._files.pop(next(iter(self._files)))
         return self._files[path]
 
-    def day(self, platform: str, day: dt.date, h: int, v: int):
-        """(FireMask array or None, provenance dict) for one platform, day and tile."""
+    def fetch(self, platform: str, day: dt.date, h: int, v: int) -> tuple[dict | None, pathlib.Path | None]:
+        """Download (once) the 8-day file that holds this day, without reading it. Returns (STAC item, path)."""
         prefix = self.PLATFORMS[platform]
         items = [f for f in self._search(day, h, v) if f["id"].startswith(prefix)]
         if not items:
-            return None, {"platform": platform, "has_data": False, "reason": "no item"}
+            return None, None
         item = items[0]
         path = self.cache / f"{item['id']}_FireMask.tif"
         if not path.exists():
-            signed = self.http.get(SIGN, params={"href": item["assets"]["FireMask"]["href"]}, headers=UA, timeout=60)
-            signed.raise_for_status()
-            with self.http.get(signed.json()["href"], headers=UA, timeout=300, stream=True) as r:
-                r.raise_for_status()
+            href = item["assets"]["FireMask"]["href"]
+            url = f"{href}?{self._token(href)}"
+            with self._get(url, stream=True, timeout=300) as r:
                 tmp = path.with_suffix(".part")
                 with open(tmp, "wb") as f:
                     for chunk in r.iter_content(1 << 20):
                         f.write(chunk)
                 tmp.replace(path)
+        return item, path
+
+    def _get(self, url: str, **kw):
+        return self._send("get", url, **kw)
+
+    def _send(self, method: str, url: str, **kw):
+        """A request with retries on HTTP 429 and 5xx (waits Retry-After, or 2, 4, 8... seconds)."""
+        import time
+        for attempt in range(7):
+            r = getattr(self.http, method)(url, headers=UA, **kw)
+            if r.status_code != 429 and r.status_code < 500:
+                r.raise_for_status()
+                return r
+            wait = float(r.headers.get("Retry-After") or 2 ** (attempt + 1))
+            r.close()
+            time.sleep(min(wait, 60))
+        r.raise_for_status()
+        return r
+
+    def _token(self, href: str) -> str:
+        """One read token per storage account and container (asked again after 30 minutes), instead of one signed URL
+        per file: Planetary Computer limits how often its signing endpoint may be called."""
+        import time
+        from urllib.parse import urlparse
+        u = urlparse(href)
+        key = (u.netloc.split(".")[0], u.path.lstrip("/").split("/")[0])
+        toks = self.__dict__.setdefault("_toks", {})
+        if key not in toks or time.time() > toks[key][1]:
+            t = self._get(f"{TOKEN}/{key[0]}/{key[1]}", timeout=60).json()
+            toks[key] = (t["token"], time.time() + 30 * 60)
+        return toks[key][0]
+
+    def day(self, platform: str, day: dt.date, h: int, v: int):
+        """(FireMask array or None, provenance dict) for one platform, day and tile."""
+        item, path = self.fetch(platform, day, h, v)
+        if item is None or path is None:
+            return None, {"platform": platform, "has_data": False, "reason": "no item"}
         dates, arr = self._read(path)
         if day not in dates:
             return None, {"platform": platform, "has_data": False, "reason": "day not in file", "item": item["id"]}
