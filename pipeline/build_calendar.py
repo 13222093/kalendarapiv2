@@ -40,6 +40,8 @@ def main(argv=None) -> int:
     ap.add_argument("--cache", required=True)
     ap.add_argument("--viirs-dir", default=None)
     ap.add_argument("--k", type=int, default=1)
+    ap.add_argument("--hold-years", type=int, nargs="*", default=[],
+                    help="years written as locked even when allowed: their numbers come from the registered analysis")
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
 
@@ -71,6 +73,9 @@ def main(argv=None) -> int:
         for m in range(1, 13):
             start, end = dt.date(y, m, 1), dt.date(y, m, cal.monthrange(y, m)[1])
             ym = f"{y}-{m:02d}"
+            if y in a.hold_years:
+                months.append({"ym": ym, "locked": True, "reason": "registered analysis"})
+                continue
             try:
                 rel = guard.check(start, end)
                 release = release or rel

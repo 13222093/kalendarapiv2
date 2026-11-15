@@ -66,7 +66,7 @@ export function Calendar() {
       {cal?.exploratory ? (
         <p className="ka-cal-ribbon" role="note">
           Exploratory view, not a pre-registered result. Fire is counted in cell-days from MODIS Terra and Aqua and is not
-          harmonized yet.{anyLocked ? ' 2019 stays locked until the pre-registered plan is published.' : ''}
+          harmonized yet.{anyLocked ? ' 2019 stays locked here: its numbers come from the pre-registered analysis, with Suomi NPP included.' : ''}
         </p>
       ) : null}
       <p className="ka-cal-kicker">District calendar . {cal?.district ?? 'Pulang Pisau'}</p>
@@ -92,7 +92,7 @@ export function Calendar() {
                     <span className="ka-cal-year" role="rowheader">{y}</span>
                     {allLocked ? (
                       <span className="ka-cal-lockrow ka-cal-tile locked" role="gridcell">
-                        Locked: {y} is the pre-registered season. It appears after the plan is published.
+                        Locked: {y} is the pre-registered season. Its numbers come from the registered analysis.
                       </span>
                     ) : row.map((m, i) => {
                       const ym = `${y}-${String(i + 1).padStart(2, '0')}`;

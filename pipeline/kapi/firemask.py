@@ -52,6 +52,16 @@ def parse_dates(gdal_metadata_xml: str) -> list[dt.date]:
     return [dt.date.fromisoformat(s) for s in m.group(1).split()]
 
 
+def select_band(arr: np.ndarray, n_dates: int, band: int) -> np.ndarray:
+    """One day's layer of a FireMask file. A file holding a single day reads as a 2-D array; otherwise the days are
+    either the last axis (y, x, day) or the first (day, y, x)."""
+    if arr.ndim == 2:
+        return arr
+    if arr.shape[-1] == n_dates:
+        return arr[..., band]
+    return arr[band]
+
+
 def sha256(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -172,7 +182,7 @@ class ModisPC:
         if day not in dates:
             return None, {"platform": platform, "has_data": False, "reason": "day not in file", "item": item["id"]}
         band = dates.index(day)
-        layer = arr[..., band] if arr.ndim == 3 and arr.shape[-1] == len(dates) else arr[band]
+        layer = select_band(arr, len(dates), band)
         return layer, {"platform": platform, "has_data": True, "item": item["id"], "file": path.name,
                        "sha256": sha256(path), "bytes": path.stat().st_size, "band": band}
 

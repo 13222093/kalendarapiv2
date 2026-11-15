@@ -82,6 +82,16 @@ class FireMaskTests(unittest.TestCase):
         got = firemask.class_counts(fm, np.ones_like(fm, bool))
         self.assertEqual(got, {"fire": 3, "clear": 1, "cloud": 1, "water": 1, "unknown": 1, "not_processed": 1})
 
+    def test_select_band(self):
+        one_day = np.full((4, 4), 5, np.uint8)                       # a file holding a single day reads as 2-D
+        self.assertEqual(firemask.select_band(one_day, 1, 0).shape, (4, 4))
+        last_axis = np.zeros((4, 4, 3), np.uint8)
+        last_axis[..., 2] = 9
+        self.assertEqual(int(firemask.select_band(last_axis, 3, 2).max()), 9)
+        first_axis = np.zeros((3, 4, 4), np.uint8)
+        first_axis[1] = 7
+        self.assertEqual(int(firemask.select_band(first_axis, 3, 1).max()), 7)
+
     def test_parse_dates(self):
         xml = '<GDALMetadata><Item name="Dates">2019-12-11 2019-12-12 2019-12-13</Item></GDALMetadata>'
         self.assertEqual(firemask.parse_dates(xml)[2], dt.date(2019, 12, 13))
